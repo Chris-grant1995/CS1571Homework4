@@ -73,12 +73,24 @@ def main():
     dataset = loadCsv(filename)
     print('Loaded data file {0} with {1} rows'.format(filename, len(dataset)))
     groups = splitData(dataset)
-    for i in groups:
-        print(len(i))
     # summaries = summarizeByClass(groups[1])
     # # print(groups[0][1])
     # prob = calculateClassProbabilities(summaries, groups[1][0])
     # print(prob)
-    
+    testingSet = groups[0]
+    t = [x for x in groups if x != testingSet]
+    trainingSet = [j for i in t for j in i]
+    print(len(testingSet)," ",len(trainingSet))
+    # TODO Calculate Probabilities on trainingSet
+
+    # TODO Estimate Output given values on Testing Set
+
+    # TODO Calculate Stats
+
+    # for testingSet in groups:
+    #     t = [x for x in groups if x != testingSet]
+    #     trainingSet = [j for i in t for j in i]
+    #     print(len(testingSet)," ",len(trainingSet))
+        
     
 main()
