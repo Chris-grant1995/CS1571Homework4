@@ -49,24 +49,81 @@ def summarizeByClass(dataset):
         summaries[classValue] = summarize(instances)
     return summaries
 
-def calculateProbability(x, mean, stdev):
-    # print(x, " ", mean)
-    if x > mean:
-        return 10000
-    else:
-        return .0014
+# def calculateProbability(x, mean, stdev):
+#     # print(x, " ", mean)
+#     if x > mean:
+#         return 10000
+#     else:
+#         return .0014
 
-def calculateClassProbabilities(summaries, inputVector):
+# def calculateClassProbabilities(summaries, inputVector):
+#     probabilities = {}
+#     for classValue  in summaries.keys():
+#         classSummaries = summaries[classValue]
+#         probabilities[classValue] = 1
+#         print(classValue)
+#         for i in range(len(classSummaries)):
+#             mean, stdev = classSummaries[i]
+#             x = inputVector[i]
+#             probabilities[classValue] *= calculateProbability(x, mean, stdev)
+#     return probabilities
+
+
+def calculateProbability(data):
     probabilities = {}
-    for classValue  in summaries.keys():
-        classSummaries = summaries[classValue]
-        probabilities[classValue] = 1
-        print(classValue)
-        for i in range(len(classSummaries)):
-            mean, stdev = classSummaries[i]
-            x = inputVector[i]
-            probabilities[classValue] *= calculateProbability(x, mean, stdev)
+
+    probabilities[0] = len(data[0]) / (len(data[0]) + len(data[1]))
+    probabilities[1] = len(data[1]) / (len(data[0]) + len(data[1]))
+    classValues = [0,1]
+    #Dict Keys = Attr Number value | spamValue
+    for classValue in classValues:
+        for attrNum in range(57):
+            keyString = str(attrNum) + " "
+            occurances = {}
+            for entry in data[classValue]:
+                attrValue = entry[0]
+                if attrValue not in occurances.keys():
+                    occurances[attrValue] = 0
+                occurances[attrValue]+=1
+            for key,value in occurances.items():
+                keyString += str(key) + " | " + str(classValue)
+                prob = value/len(data[classValue])
+                probabilities[keyString] = prob
+                keyString = str(attrNum) + " "
+    
     return probabilities
+
+def predict(probabilities, testingSet):
+    predictions = []
+    k0 = 0
+    k1 = 1
+    for entry in testingSet:
+        entry = testingSet[0]
+        # print(entry)
+        probs = [1,1]
+        
+        for attrIndex in range(len(entry)):
+            keyString = str(attrIndex) + " " + str(entry[attrIndex]) + " | "
+            keyString0 = keyString+str(0)
+            keyString1 = keyString+str(1)
+            # print(probs)
+            if keyString0 not in probabilities.keys():
+                k0+=1
+                probs[0]*= .0014
+            else:
+                probs[0]*= probabilities[keyString0]
+
+            if keyString1 not in probabilities.keys():
+                k1+=1
+                probs[1]*= .0014
+            else:
+                probs[1]*= probabilities[keyString1]
+        
+        predictions.append(probs.index(max(probs)))
+
+
+    print(k0," ", k1)
+    return predictions
 
 def main():
     filename = 'spambase.data'
@@ -81,10 +138,14 @@ def main():
     t = [x for x in groups if x != testingSet]
     trainingSet = [j for i in t for j in i]
     print(len(testingSet)," ",len(trainingSet))
-    # TODO Calculate Probabilities on trainingSet
+    splitTrainingSet = separateByClass(trainingSet)
+    
+    #Calculate Probabilities on trainingSet
+    probs = calculateProbability(splitTrainingSet)
 
     # TODO Estimate Output given values on Testing Set
-
+    predictions = predict(probs,testingSet)
+    print(predictions)
     # TODO Calculate Stats
 
     # for testingSet in groups:
