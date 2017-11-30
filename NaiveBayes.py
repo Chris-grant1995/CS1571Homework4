@@ -70,6 +70,9 @@ def summarizeByClass(dataset):
 
 
 def calculateProbability(data):
+    
+    #This might have to change, not sure yet
+
     probabilities = {}
 
     probabilities[0] = len(data[0]) / (len(data[0]) + len(data[1]))
@@ -77,6 +80,7 @@ def calculateProbability(data):
     classValues = [0,1]
     #Dict Keys = Attr Number value | spamValue
     for classValue in classValues:
+        print(len(data[classValue]))
         for attrNum in range(57):
             keyString = str(attrNum) + " "
             occurances = {}
@@ -98,15 +102,15 @@ def predict(probabilities, testingSet):
     k0 = 0
     k1 = 1
     for entry in testingSet:
-        entry = testingSet[0]
+        # entry = testingSet[0]
         # print(entry)
-        probs = [1,1]
+        probs = [probabilities[0],probabilities[1]]
         
         for attrIndex in range(len(entry)):
             keyString = str(attrIndex) + " " + str(entry[attrIndex]) + " | "
             keyString0 = keyString+str(0)
             keyString1 = keyString+str(1)
-            # print(probs)
+            
             if keyString0 not in probabilities.keys():
                 k0+=1
                 probs[0]*= .0014
@@ -118,11 +122,11 @@ def predict(probabilities, testingSet):
                 probs[1]*= .0014
             else:
                 probs[1]*= probabilities[keyString1]
-        
+        # print(probs)
         predictions.append(probs.index(max(probs)))
 
 
-    print(k0," ", k1)
+    # print(k0," ", k1)
     return predictions
 
 def main():
@@ -145,9 +149,15 @@ def main():
 
     # TODO Estimate Output given values on Testing Set
     predictions = predict(probs,testingSet)
-    print(predictions)
-    # TODO Calculate Stats
 
+
+    # TODO Calculate Stats
+    # print(predictions)
+    splitTestingSet = separateByClass(testingSet)
+    print(predictions.count(0))
+    print(predictions.count(1))
+    print(len(splitTestingSet[0]))
+    print(len(splitTestingSet[1]))
     # for testingSet in groups:
     #     t = [x for x in groups if x != testingSet]
     #     trainingSet = [j for i in t for j in i]
