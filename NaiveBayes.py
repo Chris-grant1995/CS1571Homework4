@@ -30,45 +30,6 @@ def separateByClass(dataset):
 def mean(numbers):
     return sum(numbers)/float(len(numbers))
 
-def stdev(numbers):
-    avg = mean(numbers)
-    variance = sum([pow(x-avg,2) for x in numbers])/float(len(numbers)-1)
-    return math.sqrt(variance)
-
-def summarize(dataset):
-    summaries = [(mean(attribute), stdev(attribute)) for attribute in zip(*dataset)]
-    del summaries[-1]
-    return summaries
-
-def summarizeByClass(dataset):
-    separated = separateByClass(dataset)
-    # print(separated[1][0])
-    summaries = {}
-    for classValue in separated.keys():
-        instances = separated[classValue]
-        summaries[classValue] = summarize(instances)
-    return summaries
-
-# def calculateProbability(x, mean, stdev):
-#     # print(x, " ", mean)
-#     if x > mean:
-#         return 10000
-#     else:
-#         return .0014
-
-# def calculateClassProbabilities(summaries, inputVector):
-#     probabilities = {}
-#     for classValue  in summaries.keys():
-#         classSummaries = summaries[classValue]
-#         probabilities[classValue] = 1
-#         print(classValue)
-#         for i in range(len(classSummaries)):
-#             mean, stdev = classSummaries[i]
-#             x = inputVector[i]
-#             probabilities[classValue] *= calculateProbability(x, mean, stdev)
-#     return probabilities
-
-
 def calculateProbability(data):
     
     #This might have to change, not sure yet
@@ -78,53 +39,63 @@ def calculateProbability(data):
     probabilities[0] = len(data[0]) / (len(data[0]) + len(data[1]))
     probabilities[1] = len(data[1]) / (len(data[0]) + len(data[1]))
     classValues = [0,1]
-    #Dict Keys = Attr Number value | spamValue
-    for classValue in classValues:
-        print(len(data[classValue]))
-        for attrNum in range(57):
-            keyString = str(attrNum) + " "
-            occurances = {}
-            for entry in data[classValue]:
-                attrValue = entry[0]
-                if attrValue not in occurances.keys():
-                    occurances[attrValue] = 0
-                occurances[attrValue]+=1
-            for key,value in occurances.items():
-                keyString += str(key) + " | " + str(classValue)
-                prob = value/len(data[classValue])
-                probabilities[keyString] = prob
-                keyString = str(attrNum) + " "
     
+    for classValue in classValues:
+        means = [mean(attribute) for attribute in zip(*data[classValue])]
+        del means[-1]
+        keyStr = "mean" + str(classValue)
+        probabilities[keyStr] = means
+        
+        for i in range(len(means)):
+            lessThanCount = 0
+            greaterThanCount = 0
+            for entry in data[classValue]:
+                if entry[i] <= means[i]:
+                    lessThanCount+=1
+                else:
+                    greaterThanCount+=1
+            keyStrLess = str(i) + "Less|" + str(classValue)
+            keyStrGreat = str(i) + "Great|" + str(classValue)
+
+            if lessThanCount == 0:
+                probabilities[keyStrLess] = .0014
+            else:
+                probabilities[keyStrLess] = lessThanCount/len(data[classValue])
+            if greaterThanCount == 0:
+                probabilities[keyStrGreat] = .0014
+            else:
+                probabilities[keyStrGreat] = greaterThanCount/len(data[classValue])
+            # print(lessThanCount, " ", greaterThanCount)
     return probabilities
 
 def predict(probabilities, testingSet):
     predictions = []
-    k0 = 0
-    k1 = 1
+    mean0 = probabilities["mean0"]
+    mean1 = probabilities["mean1"]
     for entry in testingSet:
-        # entry = testingSet[0]
-        # print(entry)
         probs = [probabilities[0],probabilities[1]]
-        
-        for attrIndex in range(len(entry)):
-            keyString = str(attrIndex) + " " + str(entry[attrIndex]) + " | "
-            keyString0 = keyString+str(0)
-            keyString1 = keyString+str(1)
-            
-            if keyString0 not in probabilities.keys():
-                k0+=1
-                probs[0]*= .0014
-            else:
-                probs[0]*= probabilities[keyString0]
+        for i in range(len(mean0)):
+            value = entry[i]
+            mean0Value = mean0[i]
+            mean1Value = mean1[i]
 
-            if keyString1 not in probabilities.keys():
-                k1+=1
-                probs[1]*= .0014
+            if value <= mean0Value:
+                keyStr = str(i) + "Less|0"
+                predict0Value = probabilities[keyStr]
             else:
-                probs[1]*= probabilities[keyString1]
+                keyStr = str(i) + "Great|0"
+                predict0Value = probabilities[keyStr]
+            probs[0] *= predict0Value
+
+            if value <= mean1Value:
+                keyStr = str(i) + "Less|1"
+                predict1Value = probabilities[keyStr]
+            else:
+                keyStr = str(i) + "Great|1"
+                predict1Value = probabilities[keyStr]
+            probs[1] *= predict1Value
         # print(probs)
         predictions.append(probs.index(max(probs)))
-
 
     # print(k0," ", k1)
     return predictions
@@ -146,13 +117,13 @@ def main():
     
     #Calculate Probabilities on trainingSet
     probs = calculateProbability(splitTrainingSet)
-
+    # print(probs["0Less|0"] + probs["0Great|0"])
     # TODO Estimate Output given values on Testing Set
     predictions = predict(probs,testingSet)
+    print(predictions)
 
-
-    # TODO Calculate Stats
-    # print(predictions)
+    # # TODO Calculate Stats
+    # # print(predictions)
     splitTestingSet = separateByClass(testingSet)
     print(predictions.count(0))
     print(predictions.count(1))
