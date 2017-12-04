@@ -30,6 +30,9 @@ def separateByClass(dataset):
 def mean(numbers):
     return sum(numbers)/float(len(numbers))
 
+def column(matrix, i):
+    return [row[i] for row in matrix]
+
 def calculateProbability(data):
     
     #This might have to change, not sure yet
@@ -100,39 +103,54 @@ def predict(probabilities, testingSet):
     # print(k0," ", k1)
     return predictions
 
+def calculateStats(predictions,testingSet):
+    falseNegatives = 0
+    falsePositives = 0
+    correctPredictions = 0
+    for i in range(len(predictions)):
+        predict = predictions[i]
+        result = testingSet[i]
+        if predict == 0 and result == 1:
+            falseNegatives+=1
+        elif predict == 1 and result == 0:
+            falsePositives+=1
+        else:
+            correctPredictions+=1
+    return (falsePositives,falseNegatives,correctPredictions)
+
 def main():
     filename = 'spambase.data'
     dataset = loadCsv(filename)
-    print('Loaded data file {0} with {1} rows'.format(filename, len(dataset)))
     groups = splitData(dataset)
     # summaries = summarizeByClass(groups[1])
     # # print(groups[0][1])
     # prob = calculateClassProbabilities(summaries, groups[1][0])
     # print(prob)
-    testingSet = groups[0]
-    t = [x for x in groups if x != testingSet]
-    trainingSet = [j for i in t for j in i]
-    print(len(testingSet)," ",len(trainingSet))
-    splitTrainingSet = separateByClass(trainingSet)
-    
-    #Calculate Probabilities on trainingSet
-    probs = calculateProbability(splitTrainingSet)
-    # print(probs["0Less|0"] + probs["0Great|0"])
-    # TODO Estimate Output given values on Testing Set
-    predictions = predict(probs,testingSet)
-    print(predictions)
+    for count in range(len(groups)):
+        testingSet = groups[count]
+        t = [x for x in groups if x != testingSet]
+        trainingSet = [j for i in t for j in i]
+        # print(len(testingSet)," ",len(trainingSet))
+        splitTrainingSet = separateByClass(trainingSet)
+        
+        #Calculate Probabilities on trainingSet
+        probs = calculateProbability(splitTrainingSet)
+        # print(probs["0Less|0"] + probs["0Great|0"])
+        # TODO Estimate Output given values on Testing Set
+        predictions = predict(probs,testingSet)
+        # print(predictions)
 
-    # # TODO Calculate Stats
-    # # print(predictions)
-    splitTestingSet = separateByClass(testingSet)
-    print(predictions.count(0))
-    print(predictions.count(1))
-    print(len(splitTestingSet[0]))
-    print(len(splitTestingSet[1]))
-    # for testingSet in groups:
-    #     t = [x for x in groups if x != testingSet]
-    #     trainingSet = [j for i in t for j in i]
-    #     print(len(testingSet)," ",len(trainingSet))
+        # # TODO Calculate Stats
+        # # print(predictions)
+        testingSetResults = column(testingSet, -1)
+        # print(testingSetResults)
+        results = calculateStats(predictions,testingSetResults)
+        # print(results)    
+        print("Class ", count+1, " False Positives:", results[0], " False Negatives:", results[1]," Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
+        # for testingSet in groups:
+        #     t = [x for x in groups if x != testingSet]
+        #     trainingSet = [j for i in t for j in i]
+        #     print(len(testingSet)," ",len(trainingSet))
         
     
 main()
