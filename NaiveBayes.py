@@ -73,6 +73,7 @@ def predict(probabilities, testingSet):
     predictions = []
     mean0 = probabilities["mean0"]
     mean1 = probabilities["mean1"]
+    # print(mean0, mean1)
     for entry in testingSet:
         probs = [probabilities[0],probabilities[1]]
         for i in range(len(mean0)):
