@@ -181,7 +181,7 @@ def main():
 
     additionalOutputDataSplitting(groups)
     print("")
-    additionalOutputProbabilities(groups)
+    # additionalOutputProbabilities(groups)
 
     for count in range(len(groups)):
         testingSet = groups[count]
