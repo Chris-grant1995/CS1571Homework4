@@ -42,7 +42,7 @@ def calculateProbability(data):
     classValues = [0,1]
     
     for classValue in classValues:
-        means = [mean(attribute) for attribute in zip(*data[classValue])]
+        means = [mean(attribute) for attribute in zip(*(data[0] + data[1]))]
         del means[-1]
         keyStr = "mean" + str(classValue)
         probabilities[keyStr] = means
@@ -202,7 +202,7 @@ def main():
         # print(testingSetResults)
         results = calculateStats(predictions,testingSetResults)
         # print(results)    
-        print("Class", count + 1, "False Positives:", results[0], "False Negatives:", results[1],"Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
+        print("Fold", count + 1, "False Positives:", results[0], "False Negatives:", results[1],"Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
         
     
 main()
