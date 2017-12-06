@@ -1,5 +1,5 @@
 import csv
-
+import sys
 def loadCsv(filename):
     lines = csv.reader(open(filename, "r"))
     dataset = list(lines)
@@ -115,7 +115,7 @@ def calculateStats(predictions,testingSet):
             falsePositives+=1
         else:
             correctPredictions+=1
-    return (falsePositives,falseNegatives,correctPredictions)
+    return (falsePositives,falseNegatives,correctPredictions, falsePositives/len(predictions), falseNegatives/len(predictions))
 
 def additionalOutputDataSplitting(groups):
     print("Iteration\t Training Positive Samples\t Training Negative Samples\t Testing Positive Samples\t Testing Negative Samples")
@@ -125,6 +125,15 @@ def additionalOutputDataSplitting(groups):
         trainingSet = [j for i in t for j in i]
         splitTrainingSet = separateByClass(trainingSet)
         splitTestingSet = separateByClass(testingSet)
+
+        with open(str(count+1) + "_Train.txt", 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter='\n')
+            spamwriter.writerow(trainingSet)
+        with open(str(count+1) + "_Test.txt", 'w', newline='') as csvfile:
+            spamwriter = csv.writer(csvfile, delimiter='\n')
+            spamwriter.writerow(testingSet)
+
+
         print(str(count + 1) + " \t" + str(len(splitTrainingSet[1])) + " \t" + str(len(splitTrainingSet[0])) + " \t " + str(len(splitTestingSet[1])) + " \t" + str(len(splitTestingSet[0])))
 
 def additionalOutputProbabilities(groups):
@@ -172,7 +181,7 @@ def additionalOutputProbabilities(groups):
         print(printStr)        
 
 def main():
-    filename = 'spambase.data'
+    filename = sys.argv[1]
     dataset = loadCsv(filename)
     groups = splitData(dataset)
     # summaries = summarizeByClass(groups[1])
@@ -181,9 +190,9 @@ def main():
     # print(prob)
 
     additionalOutputDataSplitting(groups)
-    print("")
+    print("Note: Values are Rounded to 3 Decimal Places For Readability, Delete the \"0:.3f\" elements of the print statements to print the whole value ")
     # additionalOutputProbabilities(groups)
-
+    overall = []
     for count in range(len(groups)):
         testingSet = groups[count]
         t = [x for x in groups if x != testingSet]
@@ -203,7 +212,12 @@ def main():
         # print(testingSetResults)
         results = calculateStats(predictions,testingSetResults)
         # print(results)    
-        print("Fold", count + 1, "False Positives:", results[0], "False Negatives:", results[1],"Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
-        
+        print("Fold", count + 1, "False Positive Rate:", "{0:.3f}".format(results[3]), "False Negative Rate:", "{0:.3f}".format(results[4]),"Error Rate:", "{0:.3f}".format((results[0] + results[1])/(results[0] + results[1] + results[2])))
+        overall.append((results[3], results[4], (results[0] + results[1])/(results[0] + results[1] + results[2]) ))
     
+    # print(overall)
+    averageFalsePositive = sum([x[0] for x in overall])/5
+    averageFalseNegative = sum([x[1] for x in overall])/5
+    averageErrorRate = sum([x[2] for x in overall])/5
+    print("Avg", "Avg False Positive Rate:", "{0:.3f}".format(averageFalsePositive),"Avg False Negative Rate:", "{0:.3f}".format(averageFalseNegative),"Average Error Rate:","{0:.3f}".format(averageErrorRate))
 main()
