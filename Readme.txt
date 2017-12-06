@@ -8,3 +8,4 @@ The only additional library needed to run this code is the csv library, which is
 
 Everything in this project works. 
 
+There are points where I've rounded the output of the program for the sake of readability. This can be undone by deleting the contents between any {} within a print statement. 
