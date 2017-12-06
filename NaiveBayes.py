@@ -1,5 +1,5 @@
 import csv
-import math
+
 def loadCsv(filename):
     lines = csv.reader(open(filename, "r"))
     dataset = list(lines)
@@ -35,8 +35,6 @@ def column(matrix, i):
 
 def calculateProbability(data):
     
-    #This might have to change, not sure yet
-
     probabilities = {}
 
     probabilities[0] = len(data[0]) / (len(data[0]) + len(data[1]))
@@ -118,6 +116,60 @@ def calculateStats(predictions,testingSet):
             correctPredictions+=1
     return (falsePositives,falseNegatives,correctPredictions)
 
+def additionalOutputDataSplitting(groups):
+    print("Iteration\t Training Positive Samples\t Training Negative Samples\t Testing Positive Samples\t Testing Negative Samples")
+    for count in range(len(groups)):
+        testingSet = groups[count]
+        t = [x for x in groups if x != testingSet]
+        trainingSet = [j for i in t for j in i]
+        splitTrainingSet = separateByClass(trainingSet)
+        splitTestingSet = separateByClass(testingSet)
+        print(str(count + 1) + " \t" + str(len(splitTrainingSet[1])) + " \t" + str(len(splitTrainingSet[0])) + " \t " + str(len(splitTestingSet[1])) + " \t" + str(len(splitTestingSet[0])))
+
+def additionalOutputProbabilities(groups):
+    print("Values are rounded to .2 Decimal Places for Readability")
+    printStr = "iter\t"
+    for i in range(57):
+        featureNum = i+1
+        lessNotSpam = "Pr(F{}<= mui | NotSpam)".format(featureNum)
+        printStr+= lessNotSpam + "\t"
+
+        greatNotSpam = "Pr(F{}> mui | NotSpam)".format(featureNum)
+        printStr+= greatNotSpam + "\t"
+
+        lessSpam = "Pr(F{}<= mui | Spam)".format(featureNum)
+        printStr+= lessSpam + "\t"
+
+        greatSpam = "Pr(F{}> mui | Spam)".format(featureNum)
+        printStr+= greatSpam + "\t"
+    print(printStr)
+    for count in range(len(groups)):
+        testingSet = groups[count]
+        t = [x for x in groups if x != testingSet]
+        trainingSet = [j for i in t for j in i]
+        # print(len(testingSet)," ",len(trainingSet))
+        splitTrainingSet = separateByClass(trainingSet)
+        probs = calculateProbability(splitTrainingSet)
+        printStr = str(count +1)
+        for i in range(57):
+            
+            # float("{0:.2f}".format(probs[keyStr]))
+
+
+            keyStr = str(i) + "Less|0"
+            lessNotSpam = float("{0:.2f}".format(probs[keyStr]))
+            keyStr = str(i) + "Great|0"
+            greatNotSpam = float("{0:.2f}".format(probs[keyStr]))
+            keyStr = str(i) + "Less|1"
+            lessSpam = float("{0:.2f}".format(probs[keyStr]))
+            keyStr = str(i) + "Great|1"
+            greatSpam = float("{0:.2f}".format(probs[keyStr]))
+            printStr+="\t" + str(lessNotSpam)
+            printStr+="\t" + str(greatNotSpam)
+            printStr+="\t" + str(lessSpam)
+            printStr+="\t" + str(greatSpam)    
+        print(printStr)        
+
 def main():
     filename = 'spambase.data'
     dataset = loadCsv(filename)
@@ -126,6 +178,11 @@ def main():
     # # print(groups[0][1])
     # prob = calculateClassProbabilities(summaries, groups[1][0])
     # print(prob)
+
+    additionalOutputDataSplitting(groups)
+    print("")
+    additionalOutputProbabilities(groups)
+
     for count in range(len(groups)):
         testingSet = groups[count]
         t = [x for x in groups if x != testingSet]
@@ -140,17 +197,12 @@ def main():
         predictions = predict(probs,testingSet)
         # print(predictions)
 
-        # # TODO Calculate Stats
         # # print(predictions)
         testingSetResults = column(testingSet, -1)
         # print(testingSetResults)
         results = calculateStats(predictions,testingSetResults)
         # print(results)    
-        print("Class ", count+1, " False Positives:", results[0], " False Negatives:", results[1]," Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
-        # for testingSet in groups:
-        #     t = [x for x in groups if x != testingSet]
-        #     trainingSet = [j for i in t for j in i]
-        #     print(len(testingSet)," ",len(trainingSet))
+        print("Class", count + 1, "False Positives:", results[0], "False Negatives:", results[1],"Error Rate:", (results[0] + results[1])/(results[0] + results[1] + results[2]))
         
     
 main()
